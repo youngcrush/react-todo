@@ -1,17 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TodoForm from './TodoForm'
 function App() {
-  const [todo, setTodo] = useState([{
-    text: "Like",
-    isCompleted: false
-  },{
-    text: "Comment",
-    isCompleted: false
-  },{
-    text: "Subscribe",
-    isCompleted: false
-  }]);
+  const [todo, setTodo] = useState([]);
   const [isActive, setIsActive] = useState([]);
+  const [isLoading, setLoading] = useState(true)
+  const [limit, setLimit] = useState(5)
 
   const addTask = text => setTodo([...todo, { text }]);
   const checkTodo = (index) => {
@@ -27,7 +20,29 @@ function App() {
     newTodo.splice(i,1)
     setTodo(newTodo)
   }
-  return (
+
+  const checkSelect = (e) => {
+    setLimit(e.target.value)
+  }
+
+  useEffect(() => {
+    const url = `https://fakestoreapi.com/users?limit=${limit}`;
+    const fetchData = async() => {
+      try {
+        const response = await fetch(url)
+        const json = await response.json()
+        const username = json.map((data, i) => {
+          return {'text': `${data.name.firstname+' '+data.name.lastname}`}
+        })
+        setTodo(username)
+        setLoading(false)
+      } catch (error) {
+        console.log('error', error)
+      }
+    }
+    fetchData()
+  }, [limit, setLimit])
+  return isLoading ? 'Loading...' :  (
     <div className="App">
       <div className="todo-list">
         {todo.map((task, index) => (
@@ -38,6 +53,11 @@ function App() {
             </div>
         ))}
         <h2>You have chosen {isActive.length} items out of {todo.length}</h2>
+        <select defaultValue={5} onChange={(e) => checkSelect(e)}>
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={15}>15</option>
+        </select>
         <TodoForm addTask={addTask} />
         </div>
     </div>
